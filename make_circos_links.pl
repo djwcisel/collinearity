@@ -10,45 +10,28 @@ use Sort::Naturally;
 
 my $usage = "
 SYNOPSIS
-
 OPTIONS
-  -i|--in     [FILE]  : collinearity file (REFORMATTED ONLY)
+  -i|--in     [FILE]  : arrays file
   -g|--gff    [FILE]  : GFF file
-  -b|--breaks [FILE]  : breaks file
-  -r|--bcolor [STRING]: colour to use for detected breaks links
-  -s|--score  [FILE]  : score file with average Ks per block
-  -k|--ks     [FLOAT] : Ks threshold; don't print links with Ks > this value
-  -c|--chrom  [STRING]: colour all links from chrom with this name...
-  -l|--color  [STRING]: ... this colour (see etc/colors.conf for legit colnames)
   -o|--out            : outfile (default=INFILE.circos.links)
   -h|--help           : print this message
-
 USAGE
-  make_circos_links.pl -i Xyz.collinearity -g Xzy.gff
+  make_circos_links.pl -i Xyz.collinearity.kaks.arrays -g Xzy.gff
 \n";
 
-my ($collinearityfile,$gfffile,$breaksfile,$scorefile,$chrom,$help);
-my $bcolor = "vdblue";
-my $color = "lblue";
+my ($arraysfile,$gfffile,$help);
 my $ks = 0.5;
 
 GetOptions (
-  'i|collinearity=s' => \$collinearityfile,
+  'i|collinearity=s' => \$arraysfile,
   'g|gff=s'          => \$gfffile,
-  'b|breaks:s'       => \$breaksfile,
-  'r|bcolor:s'       => \$bcolor,
-  's|score=s'        => \$scorefile,
-  'k|ks:f'           => \$ks,
-  'c|chrom:s'        => \$chrom,
-  'l|color:s'        => \$color,
   'h|help'           => \$help
 );
 
 die $usage if $help;
-die $usage unless ($collinearityfile && $gfffile && $scorefile);
-print STDERR "[INFO] Ks threshold from $scorefile set to $ks\n";
+die $usage unless ($arraysfile && $gfffile);
 
-my (%gff_hash, %breaks_hash, %score_hash);
+my (%gff_hash);
 
 open (my $GFF, $gfffile) or die $!;
 while (<$GFF>) {
@@ -59,109 +42,40 @@ while (<$GFF>) {
   $gff_hash{$F[1]}{END} = $F[3];
 }
 close $GFF;
+
+foreach my $keys (sort keys %gff_hash){
+    print $keys, "\n";
+}
+
 print STDERR "[INFO] Parsed ".scalar(keys %gff_hash)." genes from $gfffile\n";
 
-if ($breaksfile) {
-  open (my $BREAKS, $breaksfile) or die $!;
-  while (<$BREAKS>) {
-    chomp;
-    my @F = split (/\s+/, $_);
-    if ($F[-1] =~ "break") {
-      $breaks_hash{$F[2]}{CHROM1} = $F[0];
-      $breaks_hash{$F[2]}{CHROM2} = $F[4];
-    }
-  }
-}
-print STDERR "[INFO] Found ".scalar(keys %breaks_hash)." breaks from $breaksfile\n";
 
-open (my $SCORE, $scorefile) or die $!;
-while (<$SCORE>) {
-  chomp;
-  my @F = split (/\s+/, $_);
-  $score_hash{$F[0]}{SCORE} = $F[9]; #average score
-#  $score_hash{$F[0]}{Ka} = $F[10]; #does not exist
-#  $score_hash{$F[0]}{Ks} = $F[11]; #does not exist
-}
-close $SCORE;
 
-open (my $COLL, $collinearityfile) or die $!;
-open (my $OUT, ">$collinearityfile.circos.links") or die $!;
-while (<$COLL>) {
-  chomp;
-  if ($_ =~ /^#/) {
-    next;
-  } else {
-    my @F = split (/\s+/, $_);
-    if ($score_hash{$F[0]}{SCORE} <= $ks) { #checks if score is less than or equal to set 0.5, changed to score
-      if ($breaksfile) {
-        if ( $breaks_hash{$F[0]} ) {
-          print $OUT join (
-            " ",
-            $gff_hash{$F[2]}{CHROM},
-            $gff_hash{$F[2]}{START},
-            $gff_hash{$F[2]}{END},
-            $gff_hash{$F[3]}{CHROM},
-            $gff_hash{$F[3]}{START},
-            $gff_hash{$F[3]}{END},
-            "color=$bcolor,thickness=2p",
-            "\n"
-          );
-        } elsif ($chrom) {
-          if ($gff_hash{$F[2]}{CHROM} eq $chrom) {
-            print $OUT join (
-              " ",
-              $gff_hash{$F[2]}{CHROM},
-              $gff_hash{$F[2]}{START},
-              $gff_hash{$F[2]}{END},
-              $gff_hash{$F[3]}{CHROM},
-              $gff_hash{$F[3]}{START},
-              $gff_hash{$F[3]}{END},
-              "color=$color,thickness=2p", ##158,202,225
-              "\n"
-            );
-          } else {
-            print $OUT join (
-              " ",
-              $gff_hash{$F[2]}{CHROM},
-              $gff_hash{$F[2]}{START},
-              $gff_hash{$F[2]}{END},
-              $gff_hash{$F[3]}{CHROM},
-              $gff_hash{$F[3]}{START},
-              $gff_hash{$F[3]}{END},
-              "color=vlgrey,thickness=1p", ##158,202,225
-              "\n"
-            );
-          }
-        } else {
-          print $OUT join (
-            " ",
-            $gff_hash{$F[2]}{CHROM},
-            $gff_hash{$F[2]}{START},
-            $gff_hash{$F[2]}{END},
-            $gff_hash{$F[3]}{CHROM},
-            $gff_hash{$F[3]}{START},
-            $gff_hash{$F[3]}{END},
-            "color=vlgrey,thickness=1p", ##158,202,225
-            "\n"
-          );
-        }
-      } else {
-        print $OUT join (
-          " ",
-          $gff_hash{$F[2]}{CHROM},
-          $gff_hash{$F[2]}{START},
-          $gff_hash{$F[2]}{END},
-          $gff_hash{$F[3]}{CHROM},
-          $gff_hash{$F[3]}{START},
-          $gff_hash{$F[3]}{END},
-          "color=vlgrey,thickness=1p",
-          "\n"
-        );
-      }
-    }
-  }
-}
-close $COLL;
-close $OUT;
 
-print STDERR "[INFO] Finished on ".`date`."\n";
+#open (my $ARR, $arraysfile) or die $!;
+#open (my $OUT, ">$arraysfile.circos.links") or die $!;
+#while (<$ARR>) {
+#  chomp;
+#  my @F = split (/\s+/, $_);
+#  my $color;
+#  if ($F[6] eq "T") { ##tandem
+#    $color = "252,187,161";
+#  } else {
+#    $color = "165,15,21";
+#  }
+#  print $OUT join (
+#    " ",
+#    $gff_hash{$F[2]}{CHROM},
+#    $gff_hash{$F[2]}{START},
+#    $gff_hash{$F[2]}{END},
+#    $gff_hash{$F[4]}{CHROM},
+#    $gff_hash{$F[4]}{START},
+#    $gff_hash{$F[4]}{END},
+#    "color=$color,thickness=5p",
+#    "\n"
+#  );
+#}
+#close $ARR;
+#close $OUT;
+
+#print STDERR "[INFO] Finished on ".`date`."\n";
