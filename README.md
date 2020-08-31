@@ -54,7 +54,7 @@ OPTIONS
 ### Outputs
 MCScanX collinearity file annotated with Ka and Ks per pair of genes.
 
-## calculate_collinarity_metric.pl
+## calculate_collinearity_metric.pl
 Calculates collinearity score based on the number of collinear genes divided by the total number of genes within that defined block (from [Flot et al. 2013](http://dx.doi.org/10.1038/nature12326)).
 Also calculates average Ka and Ks per block, if run on annotated MCScanX file.
 
@@ -70,11 +70,11 @@ Also calculates average Ka and Ks per block, if run on annotated MCScanX file.
 A score file with per-block collinearity scores, average Ka and Ks etc.
 Also writes an MCScanX collinearity file reformatted to remove some of the strange leading whitespaces etc.
 
-## calculate_collinarity_breakpoints.pl
+## calculate_collinearity_breakpoints.pl
 Searches for breaks in collinearity defined as occurrences where homologous blocks cannot be aligned along scaffolds without some rearrangement.
 Also counts cases where homologous regions are found physically linked on the same scaffold.
 
-Type `calculate_collinarity_breakpoints.pl -m` to see full help and definitions.
+Type `calculate_collinearity_breakpoints.pl -m` to see full help and definitions.
 
 ### Options
 ```
@@ -116,7 +116,7 @@ neither FOCAL or SUBJECT are TERMINAL
 a and e are clearly not collinear
 ```
 
-## calculate_collinarity_palindromes.pl
+## calculate_collinearity_palindromes.pl
 Searched for cases of homologous regions physically linked on the same scaffolds.
 Decomposes any such cases into tandem arrays or palindromes.
 
