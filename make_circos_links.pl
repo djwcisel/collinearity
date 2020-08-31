@@ -10,6 +10,7 @@ use Sort::Naturally;
 
 my $usage = "
 SYNOPSIS
+
 OPTIONS
   -i|--in     [FILE]  : collinearity file (REFORMATTED ONLY)
   -g|--gff    [FILE]  : GFF file
@@ -21,6 +22,7 @@ OPTIONS
   -l|--color  [STRING]: ... this colour (see etc/colors.conf for legit colnames)
   -o|--out            : outfile (default=INFILE.circos.links)
   -h|--help           : print this message
+
 USAGE
   make_circos_links.pl -i Xyz.collinearity -g Xzy.gff
 \n";
@@ -76,9 +78,9 @@ open (my $SCORE, $scorefile) or die $!;
 while (<$SCORE>) {
   chomp;
   my @F = split (/\s+/, $_);
-  $score_hash{$F[0]}{SCORE} = $F[9];
-  $score_hash{$F[0]}{Ka} = $F[10];
-  $score_hash{$F[0]}{Ks} = $F[11];
+  $score_hash{$F[0]}{SCORE} = $F[9]; #average score
+#  $score_hash{$F[0]}{Ka} = $F[10]; #does not exist
+#  $score_hash{$F[0]}{Ks} = $F[11]; #does not exist
 }
 close $SCORE;
 
@@ -90,7 +92,7 @@ while (<$COLL>) {
     next;
   } else {
     my @F = split (/\s+/, $_);
-    if ($score_hash{$F[0]}{Ks} <= $ks) {
+    if ($score_hash{$F[0]}{SCORE} <= $ks) { #checks if score is less than or equal to set 0.5, changed to score
       if ($breaksfile) {
         if ( $breaks_hash{$F[0]} ) {
           print $OUT join (
